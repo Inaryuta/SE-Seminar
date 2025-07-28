@@ -1,0 +1,132 @@
+##Class diagram:
+@startuml
+title Class Diagram - GymFlow
+
+class User {
+  -int id
+  +String username
+  +String email
+  -String password
+  +createRoutine(name: String): Routine
+  +viewStatistics(): String
+  +login(email: String, password: String): bool
+  +logExerciseSession(session: ExerciseSession): void
+}
+
+class Routine {
+  -int id
+  +String name
+  +DateTime createdAt
+  +addExercise(exercise: Exercise, sets: int, reps: int): void
+  +getExercises(): List<RoutineExercise>
+}
+
+class Exercise {
+  -int id
+  +String name
+  +String type
+  +String description
+  +isCardio(): bool
+}
+
+class RoutineExercise {
+  -int id
+  +int orderIndex
+  +int sets
+  +int reps
+  +float weight
+  +float distanceKm
+}
+
+class ExerciseSession {
+  -int id
+  +DateTime date
+  +int durationMinutes
+  +String sessionIntensity
+  +float distanceKm
+  +float caloriesBurned
+  +calculateCalories(): float
+}
+
+class RoutineLog {
+  -int id
+  +DateTime date
+  +int durationMinutes
+  +float totalCalories
+  +addExerciseLog(log: ExerciseLog): void
+  +summary(): String
+}
+
+class ExerciseLog {
+  -int id
+  +int sets
+  +int reps
+  +float weight
+}
+
+' Relationships
+User "1" -- "0..*" Routine : creates >
+User "1" -- "0..*" ExerciseSession : performs >
+User "1" -- "0..*" RoutineLog : logs >
+
+Routine "1" -- "0..*" RoutineExercise : contains >
+Exercise "1" -- "0..*" RoutineExercise : part of >
+RoutineLog "1" -- "0..*" ExerciseLog : includes >
+
+Exercise "1" -- "0..*" ExerciseSession : included in >
+Exercise "1" -- "0..*" ExerciseLog : recorded in >
+
+Routine "1" -- "0..*" RoutineLog : added in >
+
+@enduml
+
+
+##BPMN diagram:
+@startuml
+' Diagrama BPMN: Uso de la App de Gimnasio
+skinparam monochrome true
+
+start
+
+:User opens the app;
+
+' Gateway 1: ¿Tiene cuenta?
+if (Has an account?) then (Yes)
+  :User logs in;
+else (No)
+  :User registers;
+  :User logs in;
+endif
+
+' Gateway 2: ¿Tiene rutina?
+if (Has routine created?) then (Yes)
+  note right: Uses existing routine
+else (No)
+  :User creates a new routine;
+  :User adds exercises to routine;
+endif
+
+partition ExerciseSession {
+  :User starts an exercise session;
+  :User performs exercises;
+  :System calculates calories burned;
+}
+
+' Gateway 3: ¿Registrar la sesión?
+if (Wants to log the session?) then (Yes)
+  :User logs the session;
+  :System updates statistics;
+else (No)
+  note right: Session ends without logging
+endif
+
+' Gateway 4: ¿Quiere ver estadísticas?
+if (Wants to view statistics?) then (Yes)
+  :User views progress or stats;
+else (No)
+  note right: Process ends
+endif
+
+stop
+@enduml
+
