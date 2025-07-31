@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>GymFlow | Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="bg-white text-gray-800">
+    <!-- Navbar -->
+    <header class="bg-white border-b px-6 py-4 flex items-center justify-between">
+      <div class="text-lg font-bold flex items-center gap-2">
+        <span>GymFlow</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="text-sm text-gray-600 hover:underline">Logout</button>
+        <img src="https://i.pravatar.cc/40?img=2" alt="User" class="w-9 h-9 rounded-full border" />
+      </div>
+    </header>
+
+    <!-- Main Section -->
+    <main class="px-4 py-6 md:px-12 lg:px-24">
+      <h1 class="text-2xl font-semibold mb-6">Control Panel</h1>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Left: Historial de sesiones -->
+        <section class="bg-gray-50 p-6 rounded-lg shadow-md">
+          <h2 class="text-lg font-bold mb-4">Session history</h2>
+          <ul class="space-y-3 max-h-72 overflow-y-auto pr-2">
+            <!-- Simulación de sesiones -->
+            <li class="p-3 bg-white rounded-md shadow-sm border flex justify-between items-center">
+              <span>Cardio • 4 mayo 2024</span><span class="text-sm text-gray-500">45 min</span>
+            </li>
+            <li class="p-3 bg-white rounded-md shadow-sm border flex justify-between items-center">
+              <span>Fuerza • 2 mayo 2024</span><span class="text-sm text-gray-500">60 min</span>
+            </li>
+            <li class="p-3 bg-white rounded-md shadow-sm border flex justify-between items-center">
+              <span>Yoga • 30 abril 2024</span><span class="text-sm text-gray-500">30 min</span>
+            </li>
+            <!-- Puedes agregar más sesiones dinámicamente luego -->
+          </ul>
+          <div class="mt-6 text-center">
+            <a
+              href="session_pannel.html"
+              class="inline-block bg-blue-500 text-white font-semibold px-5 py-2 rounded-md hover:bg-blue-600 transition"
+              >New session</a
+            >
+          </div>
+        </section>
+
+        <!-- Right: Estadísticas -->
+        <section class="bg-gray-50 p-6 rounded-lg shadow-md h-full">
+          <h2 class="text-lg font-bold mb-4">Statistics of the month</h2>
+          <div class="flex items-center justify-center h-48 text-gray-400">
+            Future stats
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
