@@ -132,7 +132,8 @@ stop
 
 ##ER Diagram
 
-// GymFlow Database
+// GymFlow Database (Versión Mejorada)
+
 Table User {
   id int [pk, increment]
   username varchar
@@ -144,43 +145,31 @@ Table Routine {
   id int [pk, increment]
   user_id int [ref: > User.id]
   name varchar
-  created_at datetime
+  date datetime
 }
 
 Table Exercise {
   id int [pk, increment]
   name varchar
   type varchar
-  description text
 }
 
 Table RoutineExercise {
   id int [pk, increment]
   routine_id int [ref: > Routine.id]
   exercise_id int [ref: > Exercise.id]
-  order_index int
   sets int
   reps int
   weight float
   distance_km float
 }
 
-Table ExerciseSession {
-  id int [pk, increment]
-  user_id int [ref: > User.id]
-  exercise_id int [ref: > Exercise.id]
-  date datetime
-  duration_minutes int
-  session_intensity varchar
-  distance_km float
-  calories_burned float
-}
-
-Table RoutineLog {
+Table RoutineSession {
   id int [pk, increment]
   user_id int [ref: > User.id]
   routine_id int [ref: > Routine.id]
   date datetime
   duration_minutes int
-  total_calories float
+  session_intensity varchar
+  calories_burned float
 }
