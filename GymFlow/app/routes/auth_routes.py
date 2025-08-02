@@ -19,7 +19,6 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
 @router.post("/login", response_model=UserResponse)
 async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
     try:
-        # Puedes usar el email como identificador para buscar por email o username
         logged_user = await login_user(user.email, user.password, db)
         return logged_user
     except ValueError as e:

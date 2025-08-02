@@ -8,9 +8,12 @@ from datetime import datetime
 async def create_session(session_data: SessionCreate, db: AsyncSession):
     new_session = ExerciseSession(
         user_id=session_data.user_id,
-        exercise_type=session_data.exercise_type,
+        exercise_id=session_data.exercise_id,
         date=session_data.date or None,
-        duration_minutes=session_data.duration_minutes
+        duration_minutes=session_data.duration_minutes,
+        session_intensity=session_data.session_intensity,
+        distance_km=session_data.distance_km,
+        calories_burned=session_data.calories_burned
     )
     db.add(new_session)
     await db.commit()

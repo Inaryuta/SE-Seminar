@@ -1,23 +1,21 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
-class RoutineCreate(BaseModel):
+class RoutineBase(BaseModel):
     user_id: int
     name: str
+    date: Optional[datetime] = None
 
-class RoutineResponse(BaseModel):
+class RoutineCreate(RoutineBase):
+    pass
+
+class RoutineUpdate(BaseModel):
+    name: Optional[str] = None
+    date: Optional[datetime] = None
+
+class RoutineResponse(RoutineBase):
     id: int
-    user_id: int
-    name: str
-    created_at: datetime
-
-    class Config:
-        orm_mode = True
-
-class RoutineWithExerciseCount(BaseModel):
-    id: int
-    name: str
-    exercise_count: int
 
     class Config:
         orm_mode = True

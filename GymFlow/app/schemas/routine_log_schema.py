@@ -1,21 +1,21 @@
 from pydantic import BaseModel
-from typing import Literal, Optional
+from typing import Optional
 from datetime import datetime
 
-class SessionCreate(BaseModel):
+class RoutineLogCreate(BaseModel):
     user_id: int
-    exercise_id: int
+    routine_id: int
     date: Optional[datetime] = None
     duration_minutes: Optional[int] = None
-    session_intensity: Optional[str] = None
-    distance_km: Optional[float] = None
-    calories_burned: Optional[float] = None
+    total_calories: Optional[float] = None
 
-class SessionResponse(BaseModel):
+class RoutineLogResponse(BaseModel):
     id: int
     user_id: int
+    routine_id: int
     date: datetime
     duration_minutes: Optional[int]
+    total_calories: Optional[float]
 
     class Config:
         orm_mode = True

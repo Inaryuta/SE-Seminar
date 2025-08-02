@@ -1,24 +1,36 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
-from app.schemas.routine_schema import RoutineCreate, RoutineResponse
-from app.services.routine_service import create_routine
-from typing import List
-from app.services.routine_service import get_routines_with_count
-from app.schemas.routine_schema import RoutineWithExerciseCount
+from app.schemas.routine_schema import RoutineCreate, RoutineResponse, RoutineUpdate
+from app.services import routine_service
 
 router = APIRouter(prefix="/routines", tags=["Routines"])
 
 @router.post("/", response_model=RoutineResponse)
-async def create_new_routine(routine: RoutineCreate, db: AsyncSession = Depends(get_db)):
-    try:
-        return await create_routine(routine, db)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+async def create_routine(routine: RoutineCreate, db: AsyncSession = Depends(get_db)):
+    return await routine_service.create_routine(db, routine)
 
-@router.get("/user/{user_id}", response_model=List[RoutineWithExerciseCount])
-async def list_user_routines(user_id: int, db: AsyncSession = Depends(get_db)):
-    try:
-        return await get_routines_with_count(user_id, db)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@router.get("/", response_model=list[RoutineResponse])
+async def get_routines(db: AsyncSession = Depends(get_db)):
+    return await routine_service.get_all_routines(db)
+
+@router.get("/{routine_id}", response_model=RoutineResponse)
+async def get_routine(routine_id: int, db: AsyncSession = Depends(get_db)):
+    routine = await routine_service.get_routine_by_id(db, routine_id)
+    if routine is None:
+        raise HTTPException(status_code=404, detail="Routine not found")
+    return routine
+
+@router.put("/{routine_id}", response_model=RoutineResponse)
+async def update_routine(routine_id: int, routine: RoutineUpdate, db: AsyncSession = Depends(get_db)):
+    updated = await routine_service.update_routine(db, routine_id, routine)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Routine not found")
+    return updated
+
+@router.delete("/{routine_id}", response_model=RoutineResponse)
+async def delete_routine(routine_id: int, db: AsyncSession = Depends(get_db)):
+    deleted = await routine_service.delete_routine(db, routine_id)
+    if deleted is None:
+        raise HTTPException(status_code=404, detail="Routine not found")
+    return deleted

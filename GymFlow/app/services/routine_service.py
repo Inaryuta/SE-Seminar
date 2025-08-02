@@ -1,25 +1,39 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy.future import select
 from app.models.routine import Routine
-from app.schemas.routine_schema import RoutineCreate
-from app.models.routine_exercise import RoutineExercise
+from app.schemas.routine_schema import RoutineCreate, RoutineUpdate
 
-async def create_routine(routine_data: RoutineCreate, db: AsyncSession):
-    new_routine = Routine(
-        user_id=routine_data.user_id,
-        name=routine_data.name
-    )
-    db.add(new_routine)
+async def create_routine(db: AsyncSession, routine: RoutineCreate):
+    db_routine = Routine(**routine.dict())
+    db.add(db_routine)
     await db.commit()
-    await db.refresh(new_routine)
-    return new_routine
+    await db.refresh(db_routine)
+    return db_routine
 
-async def get_routines_with_count(user_id: int, db: AsyncSession):
-    result = await db.execute(
-        select(Routine.id, Routine.name, func.count(RoutineExercise.id).label("exercise_count"))
-        .join(RoutineExercise, Routine.id == RoutineExercise.routine_id, isouter=True)
-        .where(Routine.user_id == user_id)
-        .group_by(Routine.id)
-    )
-    rows = result.all()
-    return [{"id": row.id, "name": row.name, "exercise_count": row.exercise_count} for row in rows]
+async def get_all_routines(db: AsyncSession):
+    result = await db.execute(select(Routine))
+    return result.scalars().all()
+
+async def get_routine_by_id(db: AsyncSession, routine_id: int):
+    result = await db.execute(select(Routine).where(Routine.id == routine_id))
+    return result.scalar_one_or_none()
+
+async def update_routine(db: AsyncSession, routine_id: int, routine: RoutineUpdate):
+    result = await db.execute(select(Routine).where(Routine.id == routine_id))
+    db_routine = result.scalar_one_or_none()
+    if db_routine is None:
+        return None
+    for key, value in routine.dict(exclude_unset=True).items():
+        setattr(db_routine, key, value)
+    await db.commit()
+    await db.refresh(db_routine)
+    return db_routine
+
+async def delete_routine(db: AsyncSession, routine_id: int):
+    result = await db.execute(select(Routine).where(Routine.id == routine_id))
+    db_routine = result.scalar_one_or_none()
+    if db_routine is None:
+        return None
+    await db.delete(db_routine)
+    await db.commit()
+    return db_routine
