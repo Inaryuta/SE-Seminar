@@ -8,15 +8,12 @@ loginForm.appendChild(message);
 loginForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
-    // Get the values
     const emailValue = document.getElementById('email').value.trim();
     const passwordValue = document.getElementById('password').value.trim();
 
-    // Clear previous message
     message.textContent = "";
     message.style.color = "";
 
-    // Frontend validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(emailValue)) {
@@ -32,7 +29,7 @@ loginForm.addEventListener("submit", async function (event) {
     }
 
     try {
-        const response = await fetch("http://127.0.0.1:5000/login", {
+        const response = await fetch("http://127.0.0.1:8000/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -50,14 +47,14 @@ loginForm.addEventListener("submit", async function (event) {
             message.textContent = "Login successful!";
             message.style.color = "green";
 
-            // Store user data in session
-            sessionStorage.setItem("user", JSON.stringify(data.user));
+            // Guardar los datos del usuario en sesión
+            sessionStorage.setItem("user", JSON.stringify(data));
 
-            // Redirection
+            // Redireccionar
             window.location.href = "index.html";
 
         } else {
-            message.textContent = data.message || "Invalid credentials.";
+            message.textContent = data.detail || "Invalid credentials.";
             message.style.color = "red";
         }
 

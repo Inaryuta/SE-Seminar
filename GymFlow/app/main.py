@@ -1,10 +1,6 @@
 from fastapi import FastAPI
 from app.routes import user_routes, routine_session_routes, auth_routes, routine_routes, exercise_routes,  routine_exercise_routes
 
-
-
-
-
 app = FastAPI()
 
 app.include_router(auth_routes.router)
