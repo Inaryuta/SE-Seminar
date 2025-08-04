@@ -8,75 +8,52 @@ class User {
   +String email
   -String password
   +createRoutine(name: String): Routine
-  +viewStatistics(): String
-  +login(email: String, password: String): bool
-  +logExerciseSession(session: ExerciseSession): void
+  +viewRoutineHistory(): List<RoutineSession>
 }
+
 
 class Routine {
   -int id
   +String name
-  +DateTime createdAt
-  +addExercise(exercise: Exercise, sets: int, reps: int): void
+  +DateTime date
+  +addExercise(exercise: Exercise, sets: int, reps: int, weight: float, distanceKm: float): void
   +getExercises(): List<RoutineExercise>
 }
+
 
 class Exercise {
   -int id
   +String name
   +String type
-  +String description
-  +isCardio(): bool
 }
+
 
 class RoutineExercise {
   -int id
-  +int orderIndex
   +int sets
   +int reps
   +float weight
   +float distanceKm
 }
 
-class ExerciseSession {
+
+class RoutineSession {
   -int id
   +DateTime date
   +int durationMinutes
   +String sessionIntensity
-  +float distanceKm
   +float caloriesBurned
-  +calculateCalories(): float
+  +summarizeSession(): String
 }
 
-class RoutineLog {
-  -int id
-  +DateTime date
-  +int durationMinutes
-  +float totalCalories
-  +addExerciseLog(log: ExerciseLog): void
-  +summary(): String
-}
 
-class ExerciseLog {
-  -int id
-  +int sets
-  +int reps
-  +float weight
-}
-
-' Relationships
 User "1" -- "0..*" Routine : creates >
-User "1" -- "0..*" ExerciseSession : performs >
-User "1" -- "0..*" RoutineLog : logs >
+User "1" -- "0..*" RoutineSession : logs >
 
-Routine "1" -- "0..*" RoutineExercise : contains >
-Exercise "1" -- "0..*" RoutineExercise : part of >
-RoutineLog "1" -- "0..*" ExerciseLog : includes >
+Routine "1" -- "0..*" RoutineExercise : includes >
+Routine "1" -- "0..*" RoutineSession : is executed in >
 
-Exercise "1" -- "0..*" ExerciseSession : included in >
-Exercise "1" -- "0..*" ExerciseLog : recorded in >
-
-Routine "1" -- "0..*" RoutineLog : added in >
+Exercise "1" -- "0..*" RoutineExercise : used in >
 
 @enduml
 
