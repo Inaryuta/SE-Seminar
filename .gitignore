@@ -1,0 +1,14 @@
+# Entornos virtuales
+venv/
+env/
+.venv/
+GymFlow/Lib/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Otros archivos innecesarios
+.DS_Store
+Thumbs.db
