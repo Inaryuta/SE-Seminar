@@ -44,19 +44,17 @@ loginForm.addEventListener("submit", async function (event) {
         console.log("Response data:", data);
 
         if (response.ok) {
-            message.textContent = "Login successful!";
-            message.style.color = "green";
+        message.textContent = "Login successful!";
+        message.style.color = "green";
 
-            // Guardar los datos del usuario en sesión
-            sessionStorage.setItem("user", JSON.stringify(data));
+        // Guardar en sessionStorage (puede contener más info)
+        sessionStorage.setItem("user", JSON.stringify(data));
 
-            // Redireccionar
-            window.location.href = "index.html";
-
-        } else {
-            message.textContent = data.detail || "Invalid credentials.";
-            message.style.color = "red";
-        }
+        // Guardar el user_id en localStorage (lo usará session_panel.js)
+        localStorage.setItem("user_id", data.id);
+        
+        window.location.href = "user_panel.html";
+    }
 
     } catch (error) {
         console.error("Connection error:", error);

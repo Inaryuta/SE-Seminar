@@ -1,156 +1,139 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const addExerciseBtn = document.getElementById("addExerciseBtn");
-  const exercisesContainer = document.getElementById("exercisesContainer");
-  const form = document.getElementById("exerciseForm");
+document.addEventListener("DOMContentLoaded", async () => {
+    const exerciseSelects = document.querySelectorAll(".exercise-select");
+    const addExerciseBtn = document.getElementById("addExerciseBtn");
+    const saveSessionBtn = document.getElementById("saveSessionBtn");
+    const exercisesContainer = document.getElementById("exercisesContainer");
 
-  // Lista de ejercicios
-  const exercisesList = [
-    "Squats",
-    "Deadlift",
-    "Bench Press",
-    "Overhead Press",
-    "Pull-ups",
-    "Running"
-  ];
+    // 1. Cargar ejercicios para el select
+    async function loadExercises() {
+        try {
+            const response = await fetch("http://127.0.0.1:8000/exercises/");
+            const exercises = await response.json();
 
-  // Crear una fila de ejercicio
-  function createExerciseRow() {
-    const row = document.createElement("div");
-    row.className = "grid grid-cols-6 gap-2 mb-2 items-center";
+            exerciseSelects.forEach(select => {
+                exercises.forEach(ex => {
+                    const option = document.createElement("option");
+                    option.value = ex.id;
+                    option.textContent = ex.name;
+                    select.appendChild(option);
+                });
+            });
+        } catch (error) {
+            console.error("Error loading exercises:", error);
+        }
+    }
 
-    // Selector de ejercicio
-    const select = document.createElement("select");
-    select.className = "border-gray-300 rounded-md col-span-2 p-1";
-    exercisesList.forEach(name => {
-      const opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = name;
-      select.appendChild(opt);
+    // 2. Agregar nuevo bloque de ejercicio
+    addExerciseBtn.addEventListener("click", async () => {
+        const block = document.createElement("div");
+        block.classList.add("exercise-block");
+        block.innerHTML = `
+            <select class="exercise-select"></select>
+            <input type="number" placeholder="Sets" class="sets" />
+            <input type="number" placeholder="Reps" class="reps" />
+            <input type="number" placeholder="Weight (kg)" class="weight" />
+            <input type="number" placeholder="Distance (km)" class="distance" />
+            <button class="remove-btn" style="color:red">Remove</button>
+        `;
+        exercisesContainer.appendChild(block);
+
+        // Rellenar select con ejercicios
+        try {
+            const response = await fetch("http://127.0.0.1:8000/exercises/");
+            const exercises = await response.json();
+            const select = block.querySelector(".exercise-select");
+
+            exercises.forEach(ex => {
+                const option = document.createElement("option");
+                option.value = ex.id;
+                option.textContent = ex.name;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error loading exercises in new block:", error);
+        }
+
+        block.querySelector(".remove-btn").addEventListener("click", () => {
+            block.remove();
+        });
     });
 
-    // Inputs
-    const setsInput = createNumberInput("Sets");
-    const repsInput = createNumberInput("Reps");
-    const weightInput = createNumberInput("Weight (kg)");
-    const distanceInput = createNumberInput("Distance (km)");
-    distanceInput.style.display = "none"; // Oculto por defecto
+    // 3. Guardar sesión
+    saveSessionBtn.addEventListener("click", async () => {
+        const user_id = parseInt(localStorage.getItem("user_id"));
+        const routineName = "Routine for " + new Date().toLocaleDateString();
+        const date = document.getElementById("date").value;
+        const duration = parseInt(document.getElementById("duration").value);
+        const intensity = document.getElementById("intensity").value;
+        const calories = parseInt(document.getElementById("calories").value);
 
-    // Botón eliminar
-    const deleteBtn = document.createElement("button");
-    deleteBtn.type = "button";
-    deleteBtn.className = "text-red-600 hover:underline text-sm";
-    deleteBtn.textContent = "Remove";
-    deleteBtn.onclick = () => row.remove();
+        if (!user_id || !date || isNaN(duration)) {
+            alert("Please fill in required fields.");
+            return;
+        }
 
-    // Mostrar u ocultar inputs según tipo de ejercicio
-    select.addEventListener("change", () => {
-      if (select.value === "Running") {
-        setsInput.style.display = "none";
-        repsInput.style.display = "none";
-        weightInput.style.display = "none";
-        distanceInput.style.display = "block";
-      } else {
-        setsInput.style.display = "block";
-        repsInput.style.display = "block";
-        weightInput.style.display = "block";
-        distanceInput.style.display = "none";
-      }
+        try {
+            // Paso 1: Crear rutina
+            const routineRes = await fetch("http://127.0.0.1:8000/routines/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id,
+                    name: routineName,
+                    date: new Date(date).toISOString()
+                })
+            });
+
+            const routineData = await routineRes.json();
+            const routine_id = routineData.id;
+
+            // Paso 2: Crear sesión vinculada
+            const sessionRes = await fetch("http://127.0.0.1:8000/routine_sessions/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id,
+                    routine_id,
+                    date: new Date(date).toISOString(),
+                    duration_minutes: duration,
+                    session_intensity: intensity,
+                    calories_burned: calories
+                })
+            });
+
+            const sessionData = await sessionRes.json();
+
+            // Paso 3: Recoger todos los ejercicios añadidos y postear
+            const exerciseBlocks = document.querySelectorAll(".exercise-block");
+
+            for (let block of exerciseBlocks) {
+                const exercise_id = parseInt(block.querySelector(".exercise-select").value);
+                const sets = parseInt(block.querySelector(".sets").value);
+                const reps = parseInt(block.querySelector(".reps").value);
+                const weight = parseFloat(block.querySelector(".weight").value);
+                const distance_km = parseFloat(block.querySelector(".distance").value);
+
+                await fetch("http://127.0.0.1:8000/routine_exercises/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        routine_id,
+                        exercise_id,
+                        sets,
+                        reps,
+                        weight,
+                        distance_km
+                    })
+                });
+            }
+
+            alert("Session saved successfully!");
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Error saving session:", error);
+        }
     });
 
-    row.appendChild(select);
-    row.appendChild(setsInput);
-    row.appendChild(repsInput);
-    row.appendChild(weightInput);
-    row.appendChild(distanceInput);
-    row.appendChild(deleteBtn);
-
-    return row;
-  }
-
-  // Crear input numérico con validación básica
-  function createNumberInput(placeholder) {
-    const input = document.createElement("input");
-    input.type = "text";
-    input.placeholder = placeholder;
-    input.className = "border-gray-300 rounded-md p-1";
-    input.oninput = () => {
-      const val = input.value.trim();
-      if (val !== "" && (isNaN(val) || Number(val) < 0)) {
-        input.classList.add("border-red-500");
-      } else {
-        input.classList.remove("border-red-500");
-      }
-    };
-    return input;
-  }
-
-  // Agregar ejercicio
-  addExerciseBtn.addEventListener("click", () => {
-    const row = createExerciseRow();
-    exercisesContainer.appendChild(row);
-  });
-
-  // Manejar envío
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const [date, duration, intensity, calories] = form.querySelectorAll("input");
-
-    // Validar datos de cabecera
-    if (!date.value) return alert("Date is required.");
-    if (isNaN(duration.value) || duration.value < 0) return alert("Invalid duration.");
-    if (isNaN(calories.value) || calories.value < 0) return alert("Invalid calories burned.");
-    if (!intensity.value.trim()) return alert("Intensity is required.");
-
-    const exerciseSession = {
-      user_id: 1, // cambiar según login real
-      exercise_id: null, // opcional en resumen general
-      date: date.value,
-      duration_minutes: Number(duration.value),
-      session_intensity: intensity.value,
-      distance_km: null, // opcional aquí
-      calories_burned: Number(calories.value)
-    };
-
-    const routineExercises = [];
-    const exerciseRows = exercisesContainer.querySelectorAll(".grid");
-
-    exerciseRows.forEach(row => {
-      const [select, sets, reps, weight, distance] = row.querySelectorAll("select, input");
-
-      const isRunning = select.value === "Running";
-      const obj = {
-        routine_id: 1, // temporal o dummy
-        exercise_id: getExerciseId(select.value),
-        order_index: routineExercises.length + 1,
-        sets: isRunning ? null : Number(sets.value),
-        reps: isRunning ? null : Number(reps.value),
-        weight: isRunning ? null : Number(weight.value),
-        distance_km: isRunning ? Number(distance.value) : null
-      };
-
-      routineExercises.push(obj);
-    });
-
-    const payload = {
-      exercise_session: exerciseSession,
-      routine_exercises: routineExercises
-    };
-
-    console.log("Generated JSON:", JSON.stringify(payload, null, 2));
-    alert("Session ready to be sent. Check console for JSON.");
-  });
-
-  // Simular conversión nombre → ID (esto sería de backend o catálogo real)
-  function getExerciseId(name) {
-    const map = {
-      "Squats": 1,
-      "Deadlift": 2,
-      "Bench Press": 3,
-      "Overhead Press": 4,
-      "Pull-ups": 5,
-      "Running": 6
-    };
-    return map[name] || 0;
-  }
+    loadExercises(); // Load ejercicios iniciales al cargar la página
 });

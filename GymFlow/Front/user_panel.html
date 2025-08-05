@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>GymFlow | Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
 
   <body class="bg-white text-gray-800">
@@ -27,19 +28,23 @@
         <!-- Left: Historial de sesiones -->
         <section class="bg-gray-50 p-6 rounded-lg shadow-md">
           <h2 class="text-lg font-bold mb-4">Session history</h2>
-          <ul class="space-y-3 max-h-72 overflow-y-auto pr-2">
-            <!-- Simulación de sesiones -->
-            <li class="p-3 bg-white rounded-md shadow-sm border flex justify-between items-center">
-              <span>Cardio • 4 mayo 2024</span><span class="text-sm text-gray-500">45 min</span>
-            </li>
-            <li class="p-3 bg-white rounded-md shadow-sm border flex justify-between items-center">
-              <span>Fuerza • 2 mayo 2024</span><span class="text-sm text-gray-500">60 min</span>
-            </li>
-            <li class="p-3 bg-white rounded-md shadow-sm border flex justify-between items-center">
-              <span>Yoga • 30 abril 2024</span><span class="text-sm text-gray-500">30 min</span>
-            </li>
-            <!-- Puedes agregar más sesiones dinámicamente luego -->
-          </ul>
+          <div class="mb-4 flex flex-col md:flex-row items-start md:items-center gap-4">
+            <div>
+              <label for="start-date" class="text-sm text-gray-700">Start date</label>
+              <input type="date" id="start-date" class="border rounded px-3 py-1 mt-1" />
+            </div>
+            <div>
+              <label for="end-date" class="text-sm text-gray-700">End date</label>
+              <input type="date" id="end-date" class="border rounded px-3 py-1 mt-1" />
+            </div>
+            <button
+              id="filter-btn"
+              class="mt-6 md:mt-5 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+            >
+              Filter
+            </button>
+          </div>
+          <ul class="space-y-3 max-h-72 overflow-y-auto pr-2"></ul>
           <div class="mt-6 text-center">
             <a
               href="session_panel.html"
@@ -52,11 +57,11 @@
         <!-- Right: Estadísticas -->
         <section class="bg-gray-50 p-6 rounded-lg shadow-md h-full">
           <h2 class="text-lg font-bold mb-4">Statistics of the month</h2>
-          <div class="flex items-center justify-center h-48 text-gray-400">
-            Future stats
-          </div>
+          <canvas id="routineChart" class="w-full h-64"></canvas>
+          <div id="topRoutine" class="text-center text-sm text-gray-600 mt-4"></div>
         </section>
       </div>
     </main>
+    <script src="js/user_panel.js"></script>
   </body>
 </html>
