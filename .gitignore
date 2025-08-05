@@ -1,14 +1,16 @@
-# Entornos virtuales
-venv/
-env/
-.venv/
+# Ignorar entorno virtual
+GymFlow/Include/
 GymFlow/Lib/
+GymFlow/Scripts/
+GymFlow/pyvenv.cfg
 
-# Python bytecode
+# Ignorar archivos compilados
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
 
-# Otros archivos innecesarios
+# Archivos del sistema
 .DS_Store
 Thumbs.db
+
+# Variables de entorno
+.env
