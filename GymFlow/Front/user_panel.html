@@ -15,7 +15,7 @@
         <span>GymFlow</span>
       </div>
       <div class="flex items-center gap-4">
-        <button class="text-sm text-gray-600 hover:underline">Logout</button>
+        <button id="logoutBtn" class="text-sm text-gray-600 hover:underline">Logout</button>
         <img src="https://i.pravatar.cc/40?img=7" alt="User" class="w-9 h-9 rounded-full border" />
       </div>
     </header>
@@ -55,10 +55,24 @@
         </section>
 
         <!-- Right: Estadísticas -->
-        <section class="bg-gray-50 p-6 rounded-lg shadow-md h-full">
-          <h2 class="text-lg font-bold mb-4">Statistics of the month</h2>
+        <section class="bg-gray-50 p-6 rounded-lg shadow-md h-full space-y-4">
+          <h2 class="text-lg font-bold">Statistics of the month</h2>
+
           <canvas id="routineChart" class="w-full h-64"></canvas>
-          <div id="topRoutine" class="text-center text-sm text-gray-600 mt-4"></div>
+          <div id="topRoutine" class="text-center text-sm text-gray-600"></div>
+
+          <!-- Nuevas estadísticas resumidas -->
+          <div class="text-sm text-gray-700 space-y-1 mt-2 border-t pt-4">
+            <p><strong>Total calories burned:</strong> <span id="totalCalories">0</span> kcal</p>
+            <p><strong>Average duration per session:</strong> <span id="avgDuration">0</span> min</p>
+            <p><strong>Total sessions:</strong> <span id="totalSessions">0</span></p>
+          </div>
+          
+          <!-- Segundo gráfico opcional (ej: calorías por rutina) -->
+          <div class="mt-6">
+            <h3 class="text-sm font-semibold text-gray-700 mb-2">Calories burned per routine</h3>
+            <canvas id="caloriesChart" class="w-full h-64"></canvas>
+          </div>
         </section>
       </div>
     </main>

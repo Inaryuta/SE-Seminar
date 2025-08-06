@@ -6,38 +6,14 @@ const filterBtn = document.getElementById("filter-btn");
 const chartCanvas = document.getElementById("routineChart");
 const topRoutineDisplay = document.getElementById("topRoutine");
 
-
-async function fetchRoutines() {
-  const response = await fetch("http://127.0.0.1:8000/routines");
-  const routines = await response.json();
-  return routines.filter(r => r.user_id === userId);
-}
-
-async function fetchRoutineSessions(routine_id) {
-  const response = await fetch(`http://127.0.0.1:8000/routine-sessions/by-routine/${routine_id}`);
-  return await response.json();
-}
-
-async function fetchRoutineExercises(session_id) {
-  const response = await fetch(`http://127.0.0.1:8000/routine-exercises/${session_id}`);
-  return await response.json();
-}
-
-async function fetchAllExercises() {
-  const response = await fetch("http://127.0.0.1:8000/exercises");
-  return await response.json();
-}
+let routineChartInstance;
+let fetchedData = [];
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
   return date.toLocaleDateString("en-GB", {
     day: "numeric", month: "short", year: "numeric"
   });
-}
-
-function estimateDuration(exercises) {
-  if (!exercises || exercises.length === 0) return 0;
-  return exercises.reduce((sum, ex) => sum + (ex.sets * ex.reps * 0.5), 0);
 }
 
 function isWithinDateRange(dateStr, startDate, endDate) {
@@ -47,78 +23,154 @@ function isWithinDateRange(dateStr, startDate, endDate) {
   return true;
 }
 
-async function renderSessionHistory(filter = false) {
-  const routines = await fetchRoutines();
-  const allExercises = await fetchAllExercises();
-  sessionList.innerHTML = "";
+function estimateDuration(sets, reps) {
+  if (!sets || !reps) return 0;
+  return sets * reps * 0.5;
+}
 
+async function fetchUserRoutineData() {
+  const response = await fetch(`http://127.0.0.1:8000/routines/user/${userId}`);
+  const data = await response.json();
+  fetchedData = data;
+  return data;
+}
+
+function groupByRoutineSession(data, startDate, endDate) {
+  const sessions = {};
+
+  data.forEach(entry => {
+    const sessionKey = `${entry.routine_id}_${entry.session_id}`;
+    if (!sessions[sessionKey]) {
+      if (startDate || endDate) {
+        if (!isWithinDateRange(entry.session_date, startDate, endDate)) return;
+      }
+
+      sessions[sessionKey] = {
+        routine_id: entry.routine_id,
+        routine_name: entry.routine_name,
+        session_date: entry.session_date,
+        duration: entry.duration_minutes,
+        exercises: []
+      };
+    }
+
+    sessions[sessionKey].exercises.push(entry);
+  });
+
+  return Object.values(sessions);
+}
+
+async function renderSessionHistory(filter = false) {
   const startDate = startDateInput.value;
   const endDate = endDateInput.value;
 
-  for (const routine of routines) {
-    const sessions = await fetchRoutineSessions(routine.id);
-    const routineExercises = await fetchRoutineExercises(routine.id);
+  sessionList.innerHTML = "";
 
-    for (const session of sessions) {
-      if (filter && !isWithinDateRange(session.date, startDate, endDate)) continue;
+  const data = await fetchUserRoutineData();
+  const groupedSessions = groupByRoutineSession(data, startDate, endDate);
 
-      const dateFormatted = formatDate(session.date);
-      
-      const routineExercises = await fetchRoutineExercises(session.id);
-      const duration = estimateDuration(routineExercises);
+  groupedSessions.forEach(session => {
+    const dateFormatted = formatDate(session.session_date);
+    const duration = session.duration || session.exercises.reduce((sum, ex) => sum + estimateDuration(ex.sets, ex.reps), 0);
 
-      const exerciseDetails = routineExercises.map(re => {
-        const exercise = allExercises.find(ex => ex.id === re.exercise_id);
-        return `${exercise?.name || 'Unknown'}: ${re.sets}x${re.reps}`;
-      }).join("<br>");
+    const exerciseDetails = session.exercises.map(ex => {
+      if (ex.distance_km !== null) {
+        return `${ex.exercise_name}: ${ex.distance_km} km`;
+      } else {
+        return `${ex.exercise_name}: ${ex.sets || 0}x${ex.reps || 0} (${ex.weight || 0} kg)`;
+      }
+    }).join("<br>");
 
-      const li = document.createElement("li");
-      li.className = "p-3 bg-white rounded-md shadow-sm border";
-      li.innerHTML = `
-        <div class="flex justify-between items-center">
-          <span>${routine.name} • ${dateFormatted}</span>
-          <span class="text-sm text-gray-500">${duration.toFixed(1)} min</span>
-        </div>
-        <div class="text-sm text-gray-600 mt-1">
-          ${exerciseDetails}
-        </div>
-      `;
-      sessionList.appendChild(li);
-    }
-  }
+    const li = document.createElement("li");
+    li.className = "p-3 bg-white rounded-md shadow-sm border";
+    li.innerHTML = `
+      <div class="flex justify-between items-center">
+        <span>${session.routine_name} • ${dateFormatted}</span>
+        <span class="text-sm text-gray-500">${duration.toFixed(1)} min</span>
+      </div>
+      <div class="text-sm text-gray-600 mt-1">
+        ${exerciseDetails}
+      </div>
+    `;
+    const editButton = document.createElement("button");
+    editButton.textContent = "Editar";
+    editButton.className = "mt-3 px-4 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700";
+
+    // 👉 Guardamos datos en localStorage y redirigimos a session_panel.html
+    editButton.addEventListener("click", () => {
+      localStorage.setItem("edit_mode", "true");
+      localStorage.setItem("routine_id", session.routine_id);
+      localStorage.setItem("session_id", session.session_id);
+      window.location.href = "session_panel.html";
+    });
+
+    li.appendChild(editButton);
+    sessionList.appendChild(li);
+  });
 }
 
-let routineChartInstance;
-
 async function renderStatistics() {
-  const routines = await fetchRoutines();
+  const data = fetchedData.length ? fetchedData : await fetchUserRoutineData();
 
   const routineCountMap = {};
-  for (const routine of routines) {
-    const sessions = await fetchRoutineSessions(routine.id);
-    routineCountMap[routine.name] = (routineCountMap[routine.name] || 0) + sessions.length;
-  }
+  const caloriesMap = {};
+  const durationList = new Set();
+  const routineSessions = new Set();
 
-  const labels = Object.keys(routineCountMap);
-  const data = Object.values(routineCountMap);
+  let totalCalories = 0;
+  let totalDuration = 0;
 
-  const max = Math.max(...data);
-  const topIndex = data.indexOf(max);
-  const topRoutineName = labels[topIndex];
-  topRoutineDisplay.textContent = `Most frequent routine: ${topRoutineName} (${max} sessions)`;
+  data.forEach(entry => {
+    const routine = entry.routine_name;
+    const sessionKey = `${entry.routine_id}_${entry.session_id}`;
 
-  //Avoid overposition
-  if (routineChartInstance) {
-    routineChartInstance.destroy();
-  }
+    // Contador por rutina
+    if (!routineCountMap[routine]) {
+      routineCountMap[routine] = new Set();
+      caloriesMap[routine] = 0;
+    }
 
-  routineChartInstance = new Chart(chartCanvas, {
+    routineCountMap[routine].add(entry.session_id);
+    routineSessions.add(sessionKey);
+
+    // Calorías acumuladas
+    if (entry.calories_burned !== null) {
+      totalCalories += entry.calories_burned;
+      caloriesMap[routine] += entry.calories_burned;
+    }
+
+    // Duración acumulada por sesión
+    if (!durationList.has(sessionKey)) {
+      const dur = entry.duration_minutes || estimateDuration(entry.sets, entry.reps);
+      totalDuration += dur;
+      durationList.add(sessionKey);
+    }
+  });
+
+  const routineLabels = Object.keys(routineCountMap);
+  const routineCounts = routineLabels.map(r => routineCountMap[r].size);
+  const calorieCounts = routineLabels.map(r => caloriesMap[r]);
+
+  const max = Math.max(...routineCounts);
+  const topRoutine = routineLabels[routineCounts.indexOf(max)];
+
+  // Mostrar resumen en HTML
+  document.getElementById("topRoutine").textContent = `Most frequent routine: ${topRoutine} (${max} sessions)`;
+  document.getElementById("totalCalories").textContent = totalCalories.toFixed(0);
+  document.getElementById("avgDuration").textContent = (totalDuration / durationList.size).toFixed(1);
+  document.getElementById("totalSessions").textContent = routineSessions.size;
+
+  // Destruir gráfico previo si existe
+  if (routineChartInstance) routineChartInstance.destroy();
+
+  // 📊 Gráfico de sesiones por rutina
+  routineChartInstance = new Chart(document.getElementById("routineChart"), {
     type: "bar",
     data: {
-      labels,
+      labels: routineLabels,
       datasets: [{
         label: "Sessions per routine",
-        data,
+        data: routineCounts,
         backgroundColor: "rgba(59, 130, 246, 0.7)",
         borderColor: "rgba(59, 130, 246, 1)",
         borderWidth: 1
@@ -126,15 +178,35 @@ async function renderStatistics() {
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { display: false }
-      },
+      plugins: { legend: { display: false } },
       scales: {
         y: {
           beginAtZero: true,
-          ticks: {
-            precision: 0
-          }
+          ticks: { precision: 0 }
+        }
+      }
+    }
+  });
+
+  // 📊 Segundo gráfico: calorías por rutina
+  new Chart(document.getElementById("caloriesChart"), {
+    type: "bar",
+    data: {
+      labels: routineLabels,
+      datasets: [{
+        label: "Calories burned",
+        data: calorieCounts,
+        backgroundColor: "rgba(16, 185, 129, 0.7)",
+        borderColor: "rgba(5, 150, 105, 1)",
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true
         }
       }
     }
@@ -142,7 +214,6 @@ async function renderStatistics() {
 }
 
 renderSessionHistory();
-
 renderStatistics();
 
 filterBtn.addEventListener("click", () => {
@@ -155,4 +226,8 @@ filterBtn.addEventListener("click", () => {
   renderSessionHistory(true);
 });
 
-
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    
+    localStorage.removeItem("user_id");
+    window.location.href = "login.html";
+});
