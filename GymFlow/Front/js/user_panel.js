@@ -13,8 +13,18 @@ async function fetchRoutines() {
   return routines.filter(r => r.user_id === userId);
 }
 
-async function fetchRoutineSessions(routineId) {
-  const response = await fetch(`http://127.0.0.1:8000/routine-sessions/${routineId}`);
+async function fetchRoutineSessions(routine_id) {
+  const response = await fetch(`http://127.0.0.1:8000/routine-sessions/by-routine/${routine_id}`);
+  return await response.json();
+}
+
+async function fetchRoutineExercises(session_id) {
+  const response = await fetch(`http://127.0.0.1:8000/routine-exercises/${session_id}`);
+  return await response.json();
+}
+
+async function fetchAllExercises() {
+  const response = await fetch("http://127.0.0.1:8000/exercises");
   return await response.json();
 }
 
@@ -26,7 +36,8 @@ function formatDate(dateStr) {
 }
 
 function estimateDuration(exercises) {
-  return exercises.length * 5; // estimación
+  if (!exercises || exercises.length === 0) return 0;
+  return exercises.reduce((sum, ex) => sum + (ex.sets * ex.reps * 0.5), 0);
 }
 
 function isWithinDateRange(dateStr, startDate, endDate) {
@@ -38,6 +49,7 @@ function isWithinDateRange(dateStr, startDate, endDate) {
 
 async function renderSessionHistory(filter = false) {
   const routines = await fetchRoutines();
+  const allExercises = await fetchAllExercises();
   sessionList.innerHTML = "";
 
   const startDate = startDateInput.value;
@@ -45,15 +57,32 @@ async function renderSessionHistory(filter = false) {
 
   for (const routine of routines) {
     const sessions = await fetchRoutineSessions(routine.id);
+    const routineExercises = await fetchRoutineExercises(routine.id);
 
     for (const session of sessions) {
       if (filter && !isWithinDateRange(session.date, startDate, endDate)) continue;
 
       const dateFormatted = formatDate(session.date);
-      const duration = estimateDuration(session.exercises || []);
+      
+      const routineExercises = await fetchRoutineExercises(session.id);
+      const duration = estimateDuration(routineExercises);
+
+      const exerciseDetails = routineExercises.map(re => {
+        const exercise = allExercises.find(ex => ex.id === re.exercise_id);
+        return `${exercise?.name || 'Unknown'}: ${re.sets}x${re.reps}`;
+      }).join("<br>");
+
       const li = document.createElement("li");
-      li.className = "p-3 bg-white rounded-md shadow-sm border flex justify-between items-center";
-      li.innerHTML = `<span>${routine.name} • ${dateFormatted}</span><span class="text-sm text-gray-500">${duration} min</span>`;
+      li.className = "p-3 bg-white rounded-md shadow-sm border";
+      li.innerHTML = `
+        <div class="flex justify-between items-center">
+          <span>${routine.name} • ${dateFormatted}</span>
+          <span class="text-sm text-gray-500">${duration.toFixed(1)} min</span>
+        </div>
+        <div class="text-sm text-gray-600 mt-1">
+          ${exerciseDetails}
+        </div>
+      `;
       sessionList.appendChild(li);
     }
   }
@@ -112,6 +141,8 @@ async function renderStatistics() {
   });
 }
 
+renderSessionHistory();
+
 renderStatistics();
 
 filterBtn.addEventListener("click", () => {
@@ -123,3 +154,5 @@ filterBtn.addEventListener("click", () => {
   }
   renderSessionHistory(true);
 });
+
+
