@@ -59,7 +59,7 @@ registerForm.addEventListener("submit", async function (event) {
             sessionStorage.setItem("user", JSON.stringify(data));
 
             // Redirigir a inicio
-            window.location.href = "index.html";
+            window.location.href = "user_panel.html";
         } else {
             message.textContent = data.detail || "Registration failed.";
             message.style.color = "red";

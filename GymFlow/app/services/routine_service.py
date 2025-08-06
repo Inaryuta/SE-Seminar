@@ -2,9 +2,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.routine import Routine
 from app.schemas.routine_schema import RoutineCreate, RoutineUpdate
+from datetime import datetime
 
 async def create_routine(db: AsyncSession, routine: RoutineCreate):
-    db_routine = Routine(**routine.dict())
+    routine_data = routine.dict()
+
+    # Asegurarse de que el campo date no tenga zona horaria
+    if isinstance(routine_data["date"], datetime) and routine_data["date"].tzinfo is not None:
+        routine_data["date"] = routine_data["date"].replace(tzinfo=None)
+
+    db_routine = Routine(**routine_data)
     db.add(db_routine)
     await db.commit()
     await db.refresh(db_routine)
