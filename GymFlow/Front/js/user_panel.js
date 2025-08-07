@@ -91,20 +91,7 @@ async function renderSessionHistory(filter = false) {
       <div class="text-sm text-gray-600 mt-1">
         ${exerciseDetails}
       </div>
-    `;
-    const editButton = document.createElement("button");
-    editButton.textContent = "Editar";
-    editButton.className = "mt-3 px-4 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700";
-
-    // 👉 Guardamos datos en localStorage y redirigimos a session_panel.html
-    editButton.addEventListener("click", () => {
-      localStorage.setItem("edit_mode", "true");
-      localStorage.setItem("routine_id", session.routine_id);
-      localStorage.setItem("session_id", session.session_id);
-      window.location.href = "session_panel.html";
-    });
-
-    li.appendChild(editButton);
+    `
     sessionList.appendChild(li);
   });
 }
