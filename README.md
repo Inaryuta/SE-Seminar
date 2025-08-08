@@ -24,7 +24,6 @@ This repository serves as a central space for materials, notes, and future devel
 - Workshop summaries  
 - Research materials  
 - Technical documentation  
-- Project proposals (if any)  
 - Presentations and reports  
 
 ---
