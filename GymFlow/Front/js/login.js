@@ -47,10 +47,10 @@ loginForm.addEventListener("submit", async function (event) {
         message.textContent = "Login successful!";
         message.style.color = "green";
 
-        // Guardar en sessionStorage (puede contener más info)
+        // Guardar en sessionStorage
         sessionStorage.setItem("user", JSON.stringify(data));
 
-        // Guardar el user_id en localStorage (lo usará session_panel.js)
+        // Guardar el user_id en localStorage
         localStorage.setItem("user_id", data.id);
         
         window.location.href = "user_panel.html";

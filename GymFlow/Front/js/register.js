@@ -58,8 +58,8 @@ registerForm.addEventListener("submit", async function (event) {
             // Guardar usuario en sesión
             sessionStorage.setItem("user", JSON.stringify(data));
 
-            // Redirigir a inicio
-            window.location.href = "user_panel.html";
+            // Redirigir a login para que pueda guardar su id en local storage
+            window.location.href = "login.html.html";
         } else {
             message.textContent = data.detail || "Registration failed.";
             message.style.color = "red";

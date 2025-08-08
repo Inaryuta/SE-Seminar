@@ -141,7 +141,6 @@ async function renderStatistics() {
   const max = Math.max(...routineCounts);
   const topRoutine = routineLabels[routineCounts.indexOf(max)];
 
-  // Mostrar resumen en HTML
   document.getElementById("topRoutine").textContent = `Most frequent routine: ${topRoutine} (${max} sessions)`;
   document.getElementById("totalCalories").textContent = totalCalories.toFixed(0);
   document.getElementById("avgDuration").textContent = (totalDuration / durationList.size).toFixed(1);
@@ -150,7 +149,7 @@ async function renderStatistics() {
   // Destruir gráfico previo si existe
   if (routineChartInstance) routineChartInstance.destroy();
 
-  // 📊 Gráfico de sesiones por rutina
+  // Gráfico de sesiones por rutina
   routineChartInstance = new Chart(document.getElementById("routineChart"), {
     type: "bar",
     data: {
@@ -175,7 +174,7 @@ async function renderStatistics() {
     }
   });
 
-  // 📊 Segundo gráfico: calorías por rutina
+  // gráfico calorías por rutina
   new Chart(document.getElementById("caloriesChart"), {
     type: "bar",
     data: {
