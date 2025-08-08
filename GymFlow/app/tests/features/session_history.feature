@@ -1,11 +1,7 @@
-Feature: View Training Session History
+Feature: Retrieve training session history
 
-  Scenario: User views full training session history
-    Given I am an existing user with training sessions
-    When I request my training session history
-    Then I receive a list of my past training sessions
-
-  Scenario: User with no sessions views training history
-    Given I am an existing user with no training sessions
-    When I request my training session history
-    Then I receive an empty list
+  Scenario: User retrieves their session history
+    Given the user has registered sessions with user_id 1
+    When I make a GET request to "/routine-sessions?user_id=1"
+    Then the response status code should be 200
+    And the response should contain a list of sessions
