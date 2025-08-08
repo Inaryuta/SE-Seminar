@@ -12,7 +12,7 @@
 
 - Esteban Villalba Delgadillo - 20212020064  
   eavillalbad@udistrital.edu.co  
-- Walter Suarez Fonseca - ...  
+- Walter Suarez Fonseca - 20212020107 
   wasuarezf@udistrital.edu.co 
 
 ---
